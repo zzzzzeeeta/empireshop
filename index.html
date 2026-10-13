@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Empire Shop — Reselling di prodotti a prezzi imbattibili</title>
+  <meta name="description" content="Empire Shop: prodotti selezionati a prezzi competitivi, consegna rapida e supporto 24/7 su Discord." />
+  <meta name="theme-color" content="#7B2CFF" />
+
+  <link rel="icon" href="assets/logo.webp" type="image/webp" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="is-locked">
+
+  <!-- ============ LOADER (usa la GIF del logo) ============ -->
+  <div class="loader" id="loader" aria-hidden="true">
+    <img src="assets/logo-anim.webp" onerror="this.onerror=null;this.src='assets/logo.webp'" alt="" class="loader__logo" />
+    <div class="loader__bar"><span></span></div>
+  </div>
+
+  <!-- ============ SCENA 3D ============ -->
+  <div class="bg" id="bg" aria-hidden="true">
+    <div class="bg__tint"></div>
+  </div>
+  <canvas id="webgl" aria-hidden="true"></canvas>
+
+  <div class="verify-float" id="verifyFloat" role="alert" hidden>
+    <span id="verifyFloatText" data-i18n="sec.verifyText">Verifica la tua email Founder: senza verifica le regole di sicurezza bloccheranno le modifiche ai prodotti.</span>
+    <button type="button" class="btn btn--primary btn--sm" id="verifyFloatBtn" data-i18n="sec.verifyBtn">Invia email di verifica</button>
+    <button type="button" class="verify-float__x" id="verifyFloatX" aria-label="Close">×</button>
+  </div>
+
+  <!-- ============ BARRA PROMO (il mese cambia da solo) ============ -->
+  <div class="promo" id="promo" role="region" aria-label="Promo">
+    <div class="promo__in">
+      <span class="promo__word promo__word--dim" id="promoMonth">OTTOBRE</span>
+      <span class="promo__icons promo__art promo__icons--l"><svg viewBox="0 0 72 56" style="--glow:#ff5fa8;--r:-10deg;animation-delay:-0.7s" aria-hidden="true"><defs><linearGradient id="pg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7ac0"/><stop offset="1" stop-color="#7b2cff"/></linearGradient></defs><path fill="url(#pg1)" d="M16 8h40c7 0 12 5 13.5 13l2.5 18c1 6-5.5 10-10 6.5L52 36H20l-9.5 9.5C6 49 0 45 1 39l2.5-18C5 13 9 8 16 8Z"/><path d="M12 12h40" stroke="#fff" stroke-opacity=".35" stroke-width="2" stroke-linecap="round"/><path d="M17 22h11M22.5 16.5v11" stroke="#fff" stroke-width="4" stroke-linecap="round"/><circle cx="52" cy="17" r="3.3" fill="#ffd84d"/><circle cx="59" cy="23" r="3.3" fill="#5ad1ff"/><circle cx="45" cy="23" r="3.3" fill="#7dffb2"/><circle cx="52" cy="29" r="3.3" fill="#fff"/></svg><svg viewBox="0 0 64 64" style="--glow:#3fd0ff;--r:6deg;animation-delay:-1.4s" aria-hidden="true"><defs><linearGradient id="pg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ad1ff"/><stop offset="1" stop-color="#2c6bff"/></linearGradient></defs><path d="M10 38a22 22 0 0 1 44 0" fill="none" stroke="url(#pg2)" stroke-width="5.5" stroke-linecap="round"/><rect x="3" y="34" width="14" height="22" rx="6" fill="url(#pg2)"/><rect x="47" y="34" width="14" height="22" rx="6" fill="url(#pg2)"/><rect x="6" y="38" width="4" height="14" rx="2" fill="#fff" fill-opacity=".45"/><path d="M54 56c0 5-6 6-14 6" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="38" cy="62" r="2.6" fill="#ffd84d"/></svg><svg viewBox="0 0 64 64" style="--glow:#ffb43f;--r:-6deg;animation-delay:-2.0999999999999996s" aria-hidden="true"><defs><linearGradient id="pg3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd84d"/><stop offset="1" stop-color="#ff6a3d"/></linearGradient></defs><rect x="9" y="29" width="46" height="29" rx="5" fill="url(#pg3)"/><rect x="5" y="20" width="54" height="13" rx="4" fill="url(#pg3)"/><rect x="5" y="20" width="54" height="5" rx="2.5" fill="#fff" fill-opacity=".35"/><rect x="28.5" y="20" width="7" height="38" fill="#fff"/><path d="M32 20c-8-12-20-4-10 0M32 20c8-12 20-4 10 0" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg></span>
+      <span class="promo__center"><img src="assets/bag-small.webp" alt="" class="promo__bag" /><span class="promo__word promo__stack"><b id="promoA">PREZZI</b><b id="promoB">GIÙ</b></span></span>
+      <span class="promo__icons promo__art promo__icons--r"><svg viewBox="0 0 64 64" style="--glow:#5dff9a;--r:8deg;animation-delay:-2.8s" aria-hidden="true"><defs><linearGradient id="pg4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9dff6a"/><stop offset="1" stop-color="#00c27a"/></linearGradient></defs><path d="M9 48a25 25 0 1 1 46 0" fill="none" stroke="url(#pg4)" stroke-width="7" stroke-linecap="round"/><path d="M32 42 45 22" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/><circle cx="32" cy="42" r="5.5" fill="#fff"/><path d="M33 8l-4 7h6l-4 7" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="32" y="60" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="11" fill="#fff">FPS</text></svg><svg viewBox="0 0 64 64" style="--glow:#6a8bff;--r:-8deg;animation-delay:-3.5s" aria-hidden="true"><defs><linearGradient id="pg5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fe6ff"/><stop offset="1" stop-color="#6a3dff"/></linearGradient></defs><path fill="url(#pg5)" d="M16 6h32l14 18-30 36L2 24Z"/><path fill="#fff" fill-opacity=".28" d="M16 6h32l-8 18H24Z"/><path fill="#000" fill-opacity=".16" d="M32 60 24 24h16Z"/><path d="M2 24h60M16 6l8 18 8 36M48 6l-8 18-8 36" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.6" stroke-linejoin="round"/></svg><svg viewBox="0 0 64 64" style="--glow:#ffc93f;--r:7deg;animation-delay:-4.199999999999999s" aria-hidden="true"><defs><linearGradient id="pg6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff07a"/><stop offset="1" stop-color="#ff9a1f"/></linearGradient></defs><path fill="url(#pg6)" d="M5 48 9 18l15 14 8-20 8 20 15-14 4 30Z"/><rect x="5" y="50" width="54" height="9" rx="4" fill="url(#pg6)"/><circle cx="9" cy="17" r="4" fill="#ff5fa8"/><circle cx="32" cy="11" r="4.4" fill="#5ad1ff"/><circle cx="55" cy="17" r="4" fill="#7dffb2"/><path d="M12 54h40" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/></svg></span>
+      <span class="promo__word promo__word--dim" id="promoC">SCONTI</span>
+    </div>
+    <button type="button" class="promo__x" id="promoX" aria-label="Close">×</button>
+  </div>
+
+  <div class="noise" aria-hidden="true"></div>
+
+
+  <!-- ============ ACCESSO / REGISTRAZIONE ============ -->
+  <section class="auth" id="auth" aria-label="Accedi o registrati" data-i18n-attr="aria-label:auth.aria">
+    <div data-lang-switch class="lang--auth"></div>
+    <div class="auth__side">
+      <div class="auth__emblem" aria-hidden="true">
+        <span class="auth__ring"></span>
+        <span class="auth__ring auth__ring--2"></span>
+        <img src="assets/logo.webp" onerror="this.onerror=null;this.src='assets/logo.svg'" alt="" />
+      </div>
+      <h1 class="auth__title" data-i18n="auth.title">Benvenuto nell'impero.</h1>
+      <p class="auth__text" data-i18n="auth.text">Accedi o crea un account per vedere il catalogo, ordinare e seguire i tuoi acquisti.</p>
+    </div>
+
+    <div class="auth__card">
+      <div class="auth__tabs" role="tablist">
+        <button class="auth__tab is-active" role="tab" aria-selected="true" data-tab="login" data-i18n="auth.login">Accedi</button>
+        <button class="auth__tab" role="tab" aria-selected="false" data-tab="register" data-i18n="auth.register">Registrati</button>
+        <span class="auth__pill" aria-hidden="true"></span>
+      </div>
+
+      <form class="auth__form is-active" id="loginForm" data-form="login" novalidate>
+        <label class="field">
+          <span data-i18n="auth.email">Email</span>
+          <input type="email" name="email" autocomplete="email" placeholder="nome@email.it" data-i18n-attr="placeholder:auth.emailPh" required />
+        </label>
+        <label class="field">
+          <span data-i18n="auth.password">Password</span>
+          <div class="field__pass">
+            <input type="password" name="password" autocomplete="current-password" placeholder="La tua password" data-i18n-attr="placeholder:auth.passwordPh" required />
+            <button type="button" class="field__eye" aria-label="Mostra password" data-i18n="auth.show" data-i18n-attr="aria-label:auth.showPass">Mostra</button>
+          </div>
+        </label>
+        <button type="button" class="auth__forgot" id="forgotBtn" data-i18n="auth.forgot">Password dimenticata?</button>
+        <p class="auth__error" role="alert"></p>
+        <button class="btn btn--primary btn--block" type="submit" data-i18n="auth.login">Accedi</button>
+        <p class="auth__switch"><span data-i18n="auth.noAccount">Non hai un account?</span> <button type="button" data-go="register" data-i18n="auth.register">Registrati</button></p>
+      </form>
+
+      <form class="auth__form" id="registerForm" data-form="register" novalidate>
+        <label class="field">
+          <span data-i18n="auth.name">Nome utente</span>
+          <input type="text" name="name" autocomplete="nickname" placeholder="Come vuoi farti chiamare" data-i18n-attr="placeholder:auth.namePh" maxlength="30" required />
+        </label>
+        <label class="field">
+          <span data-i18n="auth.email">Email</span>
+          <input type="email" name="email" autocomplete="email" placeholder="nome@email.it" data-i18n-attr="placeholder:auth.emailPh" required />
+        </label>
+        <label class="field">
+          <span data-i18n="auth.password">Password</span>
+          <div class="field__pass">
+            <input type="password" name="password" autocomplete="new-password" placeholder="Almeno 8 caratteri" data-i18n-attr="placeholder:auth.newPassPh" minlength="8" required />
+            <button type="button" class="field__eye" aria-label="Mostra password" data-i18n="auth.show" data-i18n-attr="aria-label:auth.showPass">Mostra</button>
+          </div>
+        </label>
+        <label class="field">
+          <span data-i18n="auth.confirm">Conferma password</span>
+          <input type="password" name="confirm" autocomplete="new-password" placeholder="Ripeti la password" data-i18n-attr="placeholder:auth.confirmPh" required />
+        </label>
+        <p class="auth__error" role="alert"></p>
+        <button class="btn btn--primary btn--block" type="submit" data-i18n="auth.create">Crea account</button>
+        <p class="auth__switch"><span data-i18n="auth.haveAccount">Hai già un account?</span> <button type="button" data-go="login" data-i18n="auth.login">Accedi</button></p>
+      </form>
+
+      <p class="auth__demo" id="demoNote" hidden data-i18n="auth.demo">
+        Modalità demo: i dati restano solo in questo browser. Il primo account registrato diventa Founder.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ NAVBAR ============ -->
+  <header class="nav" id="nav">
+    <a href="#home" class="nav__brand">
+      <img src="assets/logo.webp" onerror="this.onerror=null;this.src='assets/logo.svg'" alt="Empire Shop" class="nav__logo" />
+      <span>Empire Shop</span>
+    </a>
+
+    <nav class="nav__links" id="navLinks" aria-label="Navigazione principale" data-i18n-attr="aria-label:nav.aria">
+      <a href="#home" data-i18n="nav.home">Home</a>
+      <a href="#prodotti" data-i18n="nav.products">Prodotti</a>
+      <a href="#vantaggi" data-i18n="nav.benefits">Vantaggi</a>
+      <a href="#come-funziona" data-i18n="nav.how">Come funziona</a>
+      <a href="#supporto" data-i18n="nav.support">Supporto</a>
+    </nav>
+
+    <div class="nav__actions">
+      <div data-lang-switch></div>
+      <a href="https://discord.gg/wVfrUMEGZz" target="_blank" rel="noopener" class="btn btn--ghost btn--sm nav__discord">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.6 1.3a18.4 18.4 0 0 0-5.6 0L8.6 3a19.7 19.7 0 0 0-4.9 1.5C.6 9.1-.3 13.7.1 18.2a19.9 19.9 0 0 0 6 3l1.3-2.1a12.9 12.9 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a12.9 12.9 0 0 1-2 1l1.3 2.1a19.8 19.8 0 0 0 6-3c.5-5.2-.8-9.8-3.6-13.8ZM8 15.5c-1.2 0-2.2-1.1-2.2-2.4S6.8 10.7 8 10.7s2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Z"/></svg>
+        Discord
+      </a>
+      <button class="cart-btn" id="cartOpen" aria-label="Apri il carrello" data-i18n-attr="aria-label:nav.cartOpen">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6.2M10 20.5h.01M17 20.5h.01"/></svg>
+        <span class="cart-btn__count" id="cartCount">0</span>
+      </button>
+      <div class="user" id="userMenu" hidden>
+        <button class="user__btn" id="userBtn" aria-expanded="false" aria-haspopup="true">
+          <span class="user__avatar" id="userAvatar">E</span>
+          <span class="user__name" id="userName"></span>
+        </button>
+        <div class="user__drop" id="userDrop">
+          <div class="user__info">
+            <strong id="dropName"></strong>
+            <span id="dropEmail"></span>
+            <span class="role" id="dropRole"></span>
+          </div>
+          <div class="verify-drop" id="verifyDrop" hidden>
+            <span id="verifyDropText" data-i18n="sec.verifyDrop">⚠ Email non verificata</span>
+            <button type="button" class="user__item" id="verifyDropBtn" data-i18n="sec.verifyBtn">Invia email di verifica</button>
+          </div>
+          <button class="user__item" id="openPanel" hidden data-i18n="nav.panel">Pannello Founder</button>
+          <button class="user__item user__item--danger" id="logoutBtn" data-i18n="nav.logout">Esci</button>
+        </div>
+      </div>
+      <button class="burger" id="burger" aria-label="Apri il menu" aria-expanded="false" data-i18n-attr="aria-label:nav.burger">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="home">
+      <div class="hero__content">
+        <h1 class="hero__title">
+          <span class="line"><span data-i18n="hero.l1">Prendi</span></span>
+          <span class="line"><span data-i18n="hero.l2">di più.</span></span>
+          <span class="line line--outline"><span data-i18n="hero.l3">Paga meno.</span></span>
+        </h1>
+        <p class="hero__text reveal" data-i18n="hero.text">
+          Prodotti selezionati, prezzi che non trovi altrove e un'assistenza che ti risponde davvero.
+          Scegli, ordina e ricevi in pochi minuti.
+        </p>
+        <div class="hero__cta reveal">
+          <a href="#prodotti" class="btn btn--primary" data-i18n="hero.cta">Scopri i prodotti</a>
+          <a href="https://discord.gg/wVfrUMEGZz" target="_blank" rel="noopener" class="btn btn--ghost" data-i18n="common.joinDiscord">Entra nel Discord</a>
+        </div>
+
+      </div>
+
+      <div class="emblem-wrap" aria-hidden="true">
+        <div class="emblem" id="emblem">
+          <div class="emblem__rays"></div>
+          <div class="emblem__halo"></div>
+          <div class="emblem__ring emblem__ring--a"><i></i></div>
+          <div class="emblem__ring emblem__ring--b"><i></i></div>
+          <div class="emblem__ring emblem__ring--c"><i></i></div>
+          <div class="emblem__core">
+            <img src="assets/hero-bag.webp" onerror="this.onerror=null;this.src='assets/logo.webp'" alt="" class="emblem__logo emblem__logo--bag" />
+          </div>
+          <div class="emblem__floor"></div>
+          <span class="spark" style="--x:12%;--y:22%;--d:0s"></span>
+          <span class="spark" style="--x:84%;--y:18%;--d:.6s"></span>
+          <span class="spark" style="--x:90%;--y:64%;--d:1.2s"></span>
+          <span class="spark" style="--x:8%;--y:70%;--d:1.8s"></span>
+          <span class="spark" style="--x:50%;--y:4%;--d:2.4s"></span>
+          <span class="spark" style="--x:30%;--y:92%;--d:3s"></span>
+        </div>
+      </div>
+
+      <a href="#prodotti" class="scroll-hint" aria-label="Scorri ai prodotti" data-i18n-attr="aria-label:hero.scroll">
+        <span></span>
+      </a>
+    </section>
+
+    <!-- ============ VANTAGGI (senza riquadri) ============ -->
+    <section class="perks">
+      <div class="perk reveal"><span class="perk__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg></span><h3 data-i18n="perk.1t">Qualità garantita</h3><p data-i18n="perk.1p">Ogni prodotto viene controllato e verificato manualmente prima della spedizione. Riceverai sempre esattamente ciò che hai ordinato.</p></div>
+      <div class="perk reveal"><span class="perk__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg></span><h3 data-i18n="perk.2t">Consegna immediata</h3><p data-i18n="perk.2p">L'automazione del nostro sistema garantisce che tu possa ottenere il tuo account o il software in pochi secondi dopo l'acquisto.</p></div>
+      <div class="perk reveal"><span class="perk__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2h4"/><circle cx="12" cy="14" r="8"/><path d="M7 14h2l1.5-3 3 6 1.5-3h2"/></svg></span><h3 data-i18n="perk.3t">Assistenza in tempo reale</h3><p data-i18n="perk.3p">Il nostro team di supporto è disponibile 24 ore su 24 per assisterti con qualsiasi problema, in qualsiasi momento.</p></div>
+    </section>
+
+    <!-- ============ MARQUEE ============ -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track" id="marqueeTrack">
+        <span>Empire Shop</span><i>♛</i><span data-i18n="common.unbeatable">Prezzi imbattibili</span><i>♛</i><span data-i18n="common.fast">Consegna rapida</span><i>♛</i><span data-i18n="common.support247">Supporto 24/7</span><i>♛</i>
+      </div>
+    </div>
+
+    <!-- ============ PRODOTTI ============ -->
+    <section class="section products" id="prodotti">
+      <div class="section__head reveal">
+        <h2 class="section__title" data-i18n="prod.title">Il catalogo</h2>
+        <p class="section__text" data-i18n="prod.text">Cerca un prodotto o scegli una categoria, clicca una card per i dettagli e paga direttamente sul sito.</p>
+      </div>
+
+      <div class="search reveal" role="search">
+        <svg class="search__icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.35-4.35" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <input type="search" id="productSearch" class="search__input" placeholder="Che cosa stai cercando..." aria-label="Cerca un prodotto" data-i18n-attr="placeholder:prod.searchPh;aria-label:prod.searchAria" autocomplete="off" />
+        <button type="button" class="search__clear" id="searchClear" aria-label="Cancella la ricerca" data-i18n-attr="aria-label:prod.clearAria" hidden>✕</button>
+        <span class="search__count" id="searchCount" aria-live="polite"></span>
+      </div>
+
+      <div class="filters reveal" id="filters" role="tablist" aria-label="Categorie prodotti" data-i18n-attr="aria-label:prod.catAria"></div>
+
+      <div class="grid" id="productGrid"></div>
+    </section>
+
+    <!-- ============ VANTAGGI ============ -->
+    <section class="section features" id="vantaggi">
+      <div class="section__head reveal">
+        <h2 class="section__title" data-i18n="feat.title">Perché Empire</h2>
+        <p class="section__text" data-i18n="feat.text">Comprare deve essere semplice, veloce e sicuro. Ecco cosa ti garantiamo.</p>
+      </div>
+
+      <div class="features__grid">
+        <article class="feature reveal">
+          <div class="feature__icon"><svg viewBox="0 0 24 24"><path d="M3 10h18M5 6h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm2 9h4"/></svg></div>
+          <h3 data-i18n="feat.1.t">Pagamenti semplici</h3>
+          <p data-i18n="feat.1.p">Paghi con il metodo che preferisci, senza passaggi inutili.</p>
+        </article>
+        <article class="feature reveal">
+          <div class="feature__icon"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8ZM7.5 7.5h.01"/></svg></div>
+          <h3 data-i18n="feat.2.t">Prezzi competitivi</h3>
+          <p data-i18n="feat.2.p">Selezioniamo le offerte migliori per farti risparmiare su ogni acquisto.</p>
+        </article>
+        <article class="feature reveal">
+          <div class="feature__icon"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.4 8.5 8 9 4.6-.5 8-4 8-9V6l-8-3Zm-3 9 2 2 4-4"/></svg></div>
+          <h3 data-i18n="feat.3.t">Venditore affidabile</h3>
+          <p data-i18n="feat.3.p">Ogni ordine viene seguito dallo staff fino alla consegna.</p>
+        </article>
+        <article class="feature reveal">
+          <div class="feature__icon"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg></div>
+          <h3 data-i18n="common.fast">Consegna rapida</h3>
+          <p data-i18n="feat.4.p">Ricevi quello che hai acquistato nel minor tempo possibile.</p>
+        </article>
+        <article class="feature reveal">
+          <div class="feature__icon"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.7 7.1L4 20l1-4.9A8 8 0 1 1 21 12Z"/></svg></div>
+          <h3 data-i18n="common.support247">Supporto 24/7</h3>
+          <p data-i18n="feat.5.p">Lo staff risponde su Discord ogni giorno, a qualsiasi ora.</p>
+        </article>
+        <article class="feature reveal">
+          <div class="feature__icon"><svg viewBox="0 0 24 24"><path d="M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm11 10v-2a4 4 0 0 0-3-3.9M16 2.1a4 4 0 0 1 0 7.8"/></svg></div>
+          <h3 data-i18n="feat.6.t">Community attiva</h3>
+          <p data-i18n="feat.6.p">Offerte in anteprima, giveaway e novità per chi è nel server.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ COME FUNZIONA ============ -->
+    <section class="section steps" id="come-funziona">
+      <div class="section__head reveal">
+        <h2 class="section__title" data-i18n="steps.title">Tre passi e hai finito</h2>
+      </div>
+      <ol class="steps__list">
+        <li class="step reveal">
+          <span class="step__num">1</span>
+          <h3 data-i18n="steps.1.t">Scegli</h3>
+          <p data-i18n="steps.1.p">Sfoglia il catalogo e aggiungi al carrello quello che ti serve.</p>
+        </li>
+        <li class="step reveal">
+          <span class="step__num">2</span>
+          <h3 data-i18n="steps.2.t">Ordina</h3>
+          <p data-i18n="steps.2.p">Paga in modo sicuro direttamente dal sito, con il metodo che preferisci.</p>
+        </li>
+        <li class="step reveal">
+          <span class="step__num">3</span>
+          <h3 data-i18n="steps.3.t">Ricevi</h3>
+          <p data-i18n="steps.3.p">Appena il pagamento è confermato ricevi il prodotto in automatico, a schermo e via email.</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ============ SUPPORTO / DISCORD ============ -->
+    <section class="section support" id="supporto">
+      <div class="support__card reveal" id="supportCard">
+        <img src="assets/logo-anim.webp" onerror="this.onerror=null;this.src='assets/logo.webp'" alt="" class="support__logo" />
+        <h2 data-i18n="sup.title">Hai domande? Ti rispondiamo su Discord.</h2>
+        <p data-i18n="sup.text">Entra nel server: trovi lo staff, le offerte esclusive e una community pronta ad aiutarti.</p>
+        <a href="https://discord.gg/wVfrUMEGZz" target="_blank" rel="noopener" class="btn btn--primary btn--lg" data-i18n="common.joinDiscord">Entra nel Discord</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="footer__top">
+      <div class="footer__brand">
+        <a href="#home" class="nav__brand">
+          <img src="assets/logo.webp" onerror="this.onerror=null;this.src='assets/logo.svg'" alt="Empire Shop" class="nav__logo" />
+          <span>Empire Shop</span>
+        </a>
+        <p data-i18n="foot.about">Reselling di prodotti selezionati a prezzi competitivi, con supporto dedicato.</p>
+      </div>
+      <div class="footer__col">
+        <h4 data-i18n="foot.nav">Navigazione</h4>
+        <a href="#home" data-i18n="nav.home">Home</a>
+        <a href="#prodotti" data-i18n="nav.products">Prodotti</a>
+        <a href="#vantaggi" data-i18n="nav.benefits">Vantaggi</a>
+        <a href="#come-funziona" data-i18n="nav.how">Come funziona</a>
+      </div>
+      <div class="footer__col">
+        <h4 data-i18n="nav.support">Supporto</h4>
+        <a href="https://discord.gg/wVfrUMEGZz" target="_blank" rel="noopener">Discord</a>
+        <a href="#" data-i18n="foot.terms">Termini di servizio</a>
+        <a href="#" data-i18n="foot.privacy">Privacy</a>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p>© <span id="year"></span> Empire Shop. <span data-i18n="foot.rights">Tutti i diritti riservati.</span></p>
+      <p data-i18n="foot.disclaimer">Empire Shop non è affiliato a Discord.</p>
+    </div>
+  </footer>
+
+  <!-- ============ CARRELLO ============ -->
+  <div class="overlay" id="overlay"></div>
+  <aside class="cart" id="cart" aria-label="Carrello" aria-hidden="true" data-i18n-attr="aria-label:cart.aria">
+    <div class="cart__head">
+      <h3 data-i18n="cart.title">Il tuo carrello</h3>
+      <button class="cart__close" id="cartClose" aria-label="Chiudi il carrello" data-i18n-attr="aria-label:cart.close">✕</button>
+    </div>
+    <div class="cart__items" id="cartItems"></div>
+    <div class="cart__foot">
+      <div class="cart__total"><span data-i18n="cart.total">Totale</span><strong id="cartTotal">€0,00</strong></div>
+      <button class="btn btn--primary btn--block" id="checkout" data-i18n="cart.checkout">Completa l'ordine su Discord</button>
+      <p class="cart__note" id="cartNote" data-i18n="cart.note">Il riepilogo viene copiato negli appunti: incollalo nel ticket su Discord.</p>
+    </div>
+  </aside>
+
+
+  <!-- ============ DETTAGLIO PRODOTTO (si apre cliccando una card) ============ -->
+  <div class="pmodal" id="productModal" role="dialog" aria-modal="true" aria-labelledby="pmTitle" aria-hidden="true">
+    <div class="pmodal__card">
+      <button type="button" class="cart__close pmodal__close" id="pmClose" aria-label="Chiudi" data-i18n-attr="aria-label:common.close">✕</button>
+      <div class="pmodal__content" id="pmContent"></div>
+    </div>
+  </div>
+
+  <!-- ============ PANNELLO FOUNDER ============ -->
+  <div class="panel" id="panel" role="dialog" aria-modal="true" aria-label="Pannello Founder" aria-hidden="true" data-i18n-attr="aria-label:nav.panel">
+    <div class="panel__inner">
+      <header class="panel__head">
+        <div>
+          <span class="role role--founder">Founder</span>
+          <h2 data-i18n="panel.title">Pannello di controllo</h2>
+          <p data-i18n="panel.text">Gestisci le card del catalogo e controlla chi accede al sito.</p>
+        </div>
+        <button class="cart__close" id="panelClose" aria-label="Chiudi il pannello" data-i18n-attr="aria-label:panel.close">✕</button>
+      </header>
+
+      <div class="panel__stats" id="panelStats"></div>
+
+      <div class="panel__tabs" role="tablist">
+        <button class="ptab is-active" role="tab" data-view="products" data-i18n="panel.tabProducts">Card prodotti</button>
+        <button class="ptab" role="tab" data-view="access" data-i18n="panel.tabAccess">Accessi</button>
+        <button class="ptab" role="tab" data-view="users" data-i18n="panel.tabUsers">Utenti</button>
+      </div>
+
+      <div class="panel__view is-active" data-view="products">
+        <div class="verify-notice" id="verifyNotice" hidden>
+          <span id="verifyText" data-i18n="sec.verifyText">Verifica la tua email Founder: senza verifica le regole di sicurezza bloccheranno le modifiche ai prodotti.</span>
+          <button type="button" class="btn btn--ghost btn--sm" id="verifyBtn" data-i18n="sec.verifyBtn">Invia email di verifica</button>
+        </div>
+        <div class="panel__toolbar">
+          <input type="search" class="panel__search" id="prodSearch" placeholder="Cerca per nome o categoria" data-i18n-attr="placeholder:panel.prodSearchPh" />
+          <button class="btn btn--primary btn--sm" id="newProduct" data-i18n="panel.newCard">Nuova card</button>
+        </div>
+        <div class="ptable" id="prodTable"></div>
+      </div>
+
+      <div class="panel__view" data-view="access">
+        <div class="panel__toolbar">
+          <input type="search" class="panel__search" id="accessSearch" placeholder="Cerca per utente, email o IP" data-i18n-attr="placeholder:panel.accessSearchPh" />
+          <button class="btn btn--ghost btn--sm" id="refreshAccess" data-i18n="panel.refresh">Aggiorna</button>
+        </div>
+        <div class="ptable" id="accessTable"></div>
+      </div>
+
+      <div class="panel__view" data-view="users">
+        <div class="panel__toolbar">
+          <input type="search" class="panel__search" id="userSearch" placeholder="Cerca per nome o email" data-i18n-attr="placeholder:panel.userSearchPh" />
+          <button class="btn btn--ghost btn--sm" id="refreshUsers" data-i18n="panel.refresh">Aggiorna</button>
+        </div>
+        <div class="ptable" id="userTable"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EDITOR CARD ============ -->
+  <div class="editor" id="editor" role="dialog" aria-modal="true" aria-labelledby="editorTitle" aria-hidden="true">
+    <form class="editor__card" id="productForm" novalidate>
+      <header class="editor__head">
+        <h3 id="editorTitle">Nuova card</h3>
+        <button type="button" class="cart__close" id="editorClose" aria-label="Chiudi" data-i18n-attr="aria-label:common.close">✕</button>
+      </header>
+      <div class="editor__grid">
+        <div class="editor__preview">
+          <span class="editor__label" data-i18n="ed.preview">Anteprima</span>
+          <div id="editorPreview"></div>
+        </div>
+        <div class="editor__fields">
+          <div id="manualFields" hidden>
+          <label class="field"><span data-i18n="card.noName">Nome prodotto</span><input name="name" required maxlength="60" placeholder="Es. Felpa Empire nera" data-i18n-attr="placeholder:ed.namePh" /></label>
+          <label class="field"><span data-i18n="ed.category">Categoria</span><input name="category" list="catList" required maxlength="30" placeholder="Es. Streetwear" data-i18n-attr="placeholder:ed.categoryPh" /></label>
+          <datalist id="catList"></datalist>
+          <div class="field-row">
+            <label class="field"><span data-i18n="ed.price">Prezzo (€)</span><input name="price" type="number" min="0" step="0.01" required placeholder="19.90" /></label>
+            <label class="field"><span data-i18n="ed.oldPrice">Prezzo barrato (€)</span><input name="oldPrice" type="number" min="0" step="0.01" placeholder="Facoltativo" data-i18n-attr="placeholder:ed.optional" /></label>
+          </div>
+          <div class="field-row">
+            <label class="field"><span data-i18n="ed.stock">Disponibilità</span><input name="stock" type="number" min="0" step="1" required placeholder="10" /></label>
+          </div>
+          <label class="field field--check"><input type="checkbox" name="infinite" /><span data-i18n="ed.infinite">Stock infinito (∞) — sempre disponibile</span></label>
+          <label class="field">
+            <span data-i18n="ed.image">Immagine</span>
+            <div class="upload">
+              <input type="file" accept="image/*" id="imageFile" />
+              <span class="upload__text" id="uploadText">Trascina un'immagine o clicca per sceglierla</span>
+            </div>
+          </label>
+          <label class="field"><span data-i18n="ed.imageUrl">Oppure link immagine</span><input name="image" type="url" placeholder="https://..." /></label>
+          <label class="field"><span data-i18n="ed.desc">Descrizione</span><textarea name="description" rows="5" maxlength="3000" placeholder="Cosa contiene, come si usa, requisiti... Il cliente la vede quando clicca sulla card." data-i18n-attr="placeholder:ed.descPh"></textarea></label>
+          </div>
+          <label class="field"><span data-i18n="th.badge">Etichetta</span><input name="badge" list="badgeList" maxlength="12" placeholder="Nessuna" data-i18n-attr="placeholder:ed.none" /></label>
+            <datalist id="badgeList"></datalist>
+          <fieldset class="sa-box">
+            <legend data-i18n="ed.sellauth">SellAuth · consegna automatica</legend>
+            <p class="sa-box__hint" data-i18n="ed.saHint">Collega la card a un prodotto SellAuth: il cliente paga sul sito e riceve subito quello che hai caricato su SellAuth (chiavi, account, file o testo). Gli ID sono in dash.sellauth.com → Prodotti. Senza ID variante, la variante la sceglie il cliente al pagamento. Lascia vuoto per vendere tramite Discord.</p>
+            <p class="sa-box__warn" id="saOff" hidden data-i18n="ed.saOff">SellAuth non è ancora attivo sul sito: inserisci shopId e shopUrl in js/config.js. Fino ad allora gli ordini passano da Discord.</p>
+            <div class="field-row">
+              <label class="field"><span data-i18n="ed.saProduct">ID prodotto SellAuth</span><input name="saProduct" inputmode="numeric" maxlength="12" placeholder="35665" /></label>
+              <label class="field"><span data-i18n="ed.saVariant">ID variante</span><input name="saVariant" inputmode="numeric" maxlength="12" placeholder="Facoltativo" data-i18n-attr="placeholder:ed.optional" /></label>
+            </div>
+            <p class="sa-box__hint" id="saImportMsg" role="status" hidden></p>
+            <label class="field"><span data-i18n="ed.saKey">API key SellAuth (resta solo su questo browser, mai nel sito)</span><input name="saKey" type="password" autocomplete="off" placeholder="sellauth api key" /></label>
+            <button type="button" class="btn btn--ghost" id="saImportBtn" data-i18n="ed.saImport">↻ Importa da SellAuth</button>
+          </fieldset>
+          <p class="auth__error" id="editorError" role="alert"></p>
+        </div>
+      </div>
+      <footer class="editor__foot">
+        <button type="button" class="btn btn--ghost" id="editorCancel" data-i18n="ed.cancel">Annulla</button>
+        <button type="submit" class="btn btn--primary" id="editorSave" data-i18n="ed.save">Salva card</button>
+      </footer>
+    </form>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Three.js per la scena 3D -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- SellAuth: finestra di pagamento con consegna automatica -->
+  <script src="https://static.sellauth.com/embed/v3.min.js" defer></script>
+  <script src="js/config.js"></script>
+  <script src="js/products.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/backend.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/promo.js"></script>
+</body>
+</html>
