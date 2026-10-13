@@ -1,0 +1,60 @@
+// Regole di sicurezza Firestore — Empire Shop (v2, rafforzate)
+// Email Founder: deve essere identica a FOUNDER_EMAIL in js/config.js
+// IMPORTANTE: il Founder deve avere l'email VERIFICATA (Pannello → pulsante "Invia email di verifica"),
+// altrimenti queste regole gli bloccano le modifiche. Pubblicale da Console Firebase → Firestore → Regole.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function verified() { return request.auth.token.email_verified == true; }
+    // Il Founder si riconosce dall'email E dal fatto che sia verificata:
+    // chi si registra con la sua email senza possederla non diventa Founder.
+    function isFounder() {
+      return signedIn() && verified()
+        && request.auth.token.email.lower() == 'gabri8089@gmail.com';
+    }
+    function isActive() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+    }
+
+    // Profili utente: ognuno crea il proprio (solo campi previsti, ruolo "user"),
+    // solo il founder può leggere tutti, bloccare o sbloccare
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isFounder());
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'email', 'role', 'status', 'createdAt'])
+        && request.resource.data.keys().hasAll(['name', 'email', 'role', 'status', 'createdAt'])
+        && request.resource.data.status == 'active'
+        && request.resource.data.name is string && request.resource.data.name.size() <= 100
+        && request.resource.data.email == request.auth.token.email.lower()
+        && request.resource.data.createdAt == request.time
+        && (request.resource.data.role == 'user'
+            || (request.resource.data.role == 'founder' && isFounder()));
+      allow update, delete: if isFounder();
+    }
+
+    // Prodotti: li vedono gli utenti attivi, li modifica solo il founder
+    match /products/{id} {
+      allow read: if isActive() || isFounder();
+      allow write: if isFounder();
+    }
+
+    // Registro accessi: ognuno registra il proprio (solo campi previsti), solo il founder legge
+    match /access/{id} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'email', 'at', 'device', 'ip'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email.lower()
+        && request.resource.data.name is string && request.resource.data.name.size() <= 100
+        && request.resource.data.at == request.time;
+      allow read: if isFounder();
+      allow update, delete: if false;
+    }
+
+    // Tutto il resto è vietato
+    match /{document=**} { allow read, write: if false; }
+  }
+}
