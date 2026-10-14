@@ -50,6 +50,109 @@
     toastTimer = setTimeout(() => t.classList.remove("is-show"), ms);
   }
 
+  /* ---------- Riordino con trascinamento: mouse, dito e tastiera (frecce) ----------
+     Il contenitore resta fisso e cattura il puntatore; l'elemento trascinato si sposta nel DOM
+     mentre una copia "fantasma" segue il dito/mouse. Ai bordi dello schermo scorre da sola. */
+  function makeSortable(container, { item, handle, ghost, canStart, onDrop, wholeItemMouse = false }) {
+    const items = () => [...container.querySelectorAll(item)];
+    const idsNow = () => items().map((el) => el.dataset.id);
+    const scrollParent = () => {
+      for (let a = container; a && a !== document.body; a = a.parentElement) {
+        if (/(auto|scroll)/.test(getComputedStyle(a).overflowY) && a.scrollHeight > a.clientHeight + 2) return a;
+      }
+      return null;
+    };
+    let drag = null, kbTimer = 0;
+
+    function reorderAt(x, y) {
+      const under = document.elementFromPoint(x, y);
+      const target = under && under.closest(item);
+      if (!target || target === drag.el || !container.contains(target)) return;
+      const list = items();
+      const after = list.indexOf(drag.el) < list.indexOf(target);
+      target.parentNode.insertBefore(drag.el, after ? target.nextSibling : target);
+    }
+    function place() { drag.ghost.style.transform = `translate(${drag.x - drag.offX}px, ${drag.y - drag.offY}px)`; }
+    function tick() {
+      if (!drag || !drag.started) return;
+      const r = drag.scroller ? drag.scroller.getBoundingClientRect() : { top: 0, bottom: innerHeight };
+      const top = Math.max(r.top, 0), bottom = Math.min(r.bottom, innerHeight), edge = 70, max = 18;
+      let dy = 0;
+      if (drag.y < top + edge) dy = -max * Math.min(1, (top + edge - drag.y) / edge);
+      else if (drag.y > bottom - edge) dy = max * Math.min(1, (drag.y - (bottom - edge)) / edge);
+      if (dy) {
+        if (drag.scroller) drag.scroller.scrollTop += dy; else window.scrollBy({ top: dy, behavior: "instant" });
+        reorderAt(drag.x, drag.y);
+      }
+      drag.raf = requestAnimationFrame(tick);
+    }
+    function begin() {
+      const rect = drag.el.getBoundingClientRect();
+      const g = ghost ? ghost(drag.el) : drag.el.cloneNode(true);
+      g.classList.add("drag-ghost");
+      g.removeAttribute("id"); g.removeAttribute("data-id");
+      g.style.width = rect.width + "px";
+      if (!ghost) { g.style.height = rect.height + "px"; g.style.opacity = "1"; }
+      document.body.appendChild(g);
+      Object.assign(drag, { started: true, ghost: g, offX: drag.x0 - rect.left, offY: drag.y0 - rect.top, scroller: scrollParent(), before: idsNow().join() });
+      drag.el.classList.add("is-dragging");
+      document.body.classList.add("is-sort-drag");
+      document.documentElement.style.overflowAnchor = "none";   // evita che il browser riallinei lo scroll quando la card cambia posto
+      place();
+      drag.raf = requestAnimationFrame(tick);
+    }
+    function finish(e) {
+      if (!drag || (e && e.pointerId !== drag.id)) return;
+      const d = drag; drag = null;
+      cancelAnimationFrame(d.raf);
+      try { container.releasePointerCapture(d.id); } catch { /* già rilasciato */ }
+      if (!d.started) return;
+      d.ghost.remove();
+      d.el.classList.remove("is-dragging");
+      document.body.classList.remove("is-sort-drag");
+      document.documentElement.style.overflowAnchor = "";
+      const ids = idsNow();
+      if (ids.join() !== d.before) onDrop(ids);
+    }
+
+    container.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (canStart && !canStart()) return;
+      const el = e.target.closest(item);
+      if (!el || !container.contains(el) || e.target.closest("input, select, textarea")) return;
+      const h = e.target.closest(handle);
+      if (!(h && el.contains(h)) && !(wholeItemMouse && e.pointerType === "mouse")) return;
+      if (h && h.disabled) return;
+      e.preventDefault();
+      drag = { el, id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, started: false };
+      try { container.setPointerCapture(e.pointerId); } catch { /* ignora */ }
+    });
+    container.addEventListener("pointermove", (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      drag.x = e.clientX; drag.y = e.clientY;
+      if (!drag.started) { if (Math.hypot(drag.x - drag.x0, drag.y - drag.y0) < 5) return; begin(); }
+      place();
+      reorderAt(drag.x, drag.y);
+    });
+    container.addEventListener("pointerup", finish);
+    container.addEventListener("pointercancel", finish);
+    container.addEventListener("dragstart", (e) => { if (e.target.closest && e.target.closest(item)) e.preventDefault(); });
+    container.addEventListener("keydown", (e) => {
+      const h = e.target.closest(handle);
+      if (!h || h.disabled || (canStart && !canStart())) return;
+      const dir = e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : 0;
+      if (!dir) return;
+      const el = h.closest(item);
+      const sib = el && (dir < 0 ? el.previousElementSibling : el.nextElementSibling);
+      if (!sib || !sib.matches(item)) return;
+      e.preventDefault();
+      if (dir < 0) sib.before(el); else sib.after(el);
+      el.querySelector(handle)?.focus();
+      clearTimeout(kbTimer);
+      kbTimer = setTimeout(() => onDrop(idsNow()), 700);
+    });
+  }
+
   /* SellAuth è attivo solo con shopId e shopUrl compilati in js/config.js */
   const SA = (typeof SELLAUTH !== "undefined" && SELLAUTH) || {};
   const sellauthOn = Number(SA.shopId) > 0 && /^https?:\/\/\S+$/.test(SA.shopUrl || "");
@@ -204,6 +307,8 @@
   const filtersEl = $("#filters");
   const ALL = "__all__";   // categoria interna "Tutti" (il testo cambia con la lingua)
   let activeCat = ALL;
+  let sorting = false;                      // modalità "Riordina card" (solo Founder)
+  const sortBar = $("#sortBar"), sortToggle = $("#sortToggle"), sortHint = $("#sortHint");
   const findProduct = (id) => products.find((p) => String(p.id) === String(id));
 
   function renderFilters() {
@@ -217,6 +322,7 @@
   filtersEl.addEventListener("click", (e) => {
     const btn = e.target.closest(".chip");
     if (!btn) return;
+    if (sorting) setSorting(false);
     activeCat = btn.dataset.cat;
     renderFilters();
     renderProducts();
@@ -284,6 +390,7 @@
   searchInput.addEventListener("input", () => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
+      if (sorting && searchInput.value.trim()) setSorting(false);
       query = normalize(searchInput.value.trim());
       $("#searchClear").hidden = !searchInput.value;
       renderProducts();
@@ -315,9 +422,46 @@
     $$(".card", grid).forEach((card, i) => {
       card.dataset.index = i;
       cardObserver.observe(card);
-      if (!isTouch && !reduceMotion) addTilt(card, 12);
+      if (sorting) card.insertAdjacentHTML("afterbegin", `<button type="button" class="drag-handle drag-handle--card" aria-label="${esc(tr("sort.handle"))}" title="${esc(tr("sort.handle"))}">⠿</button>`);
+      else if (!isTouch && !reduceMotion) addTilt(card, 12);
     });
   }
+
+  function setSorting(on) {
+    sorting = !!on && currentUser?.role === "founder";
+    grid.classList.toggle("is-sorting", sorting);
+    sortToggle.setAttribute("aria-pressed", String(sorting));
+    sortToggle.dataset.i18n = sorting ? "sort.done" : "sort.start";
+    sortToggle.textContent = tr(sorting ? "sort.done" : "sort.start");
+    sortHint.hidden = !sorting;
+    if (sorting) {
+      // per riordinare serve tutta la lista: via filtri e ricerca
+      activeCat = ALL; query = ""; searchInput.value = ""; $("#searchClear").hidden = true;
+      renderFilters();
+    }
+    renderProducts();
+  }
+  sortToggle.addEventListener("click", () => setSorting(!sorting));
+
+  /* salva il nuovo ordine (si aggiorna anche l'elenco in memoria, così catalogo e pannello restano uguali) */
+  let saveQueue = Promise.resolve();
+  function saveOrder(ids, from) {
+    const pos = new Map(ids.map((id, i) => [String(id), i]));
+    products.sort((a, b) => (pos.get(String(a.id)) ?? 1e9) - (pos.get(String(b.id)) ?? 1e9));
+    saveQueue = saveQueue.then(async () => {
+      try {
+        await Backend.reorderProducts(ids);
+        toast(tr("sort.saved"));
+        if (from === "table") renderProducts();
+        else if (panel.classList.contains("is-open")) renderProdTable();
+      } catch (err) {
+        toast(err.message);
+        await loadProducts();
+        if (panel.classList.contains("is-open")) renderProdTable();
+      }
+    });
+  }
+  makeSortable(grid, { item: ".card", handle: ".drag-handle", wholeItemMouse: true, canStart: () => sorting, onDrop: (ids) => saveOrder(ids, "grid") });
 
   async function loadProducts() {
     try { products = await Backend.getProducts(); }
@@ -330,6 +474,7 @@
   }
 
   grid.addEventListener("click", (e) => {
+    if (sorting) return;
     if (e.target.closest("[data-clear-search]")) {
       if (activeCat !== ALL) { activeCat = ALL; renderFilters(); }
       return clearSearch();
@@ -754,6 +899,8 @@
     updateVerifyNotice();
 
     if (locked) {
+      if (sorting) setSorting(false);
+      sortBar.hidden = true;
       userMenu.hidden = true;
       closeCart();
       closePanel();
@@ -773,6 +920,8 @@
     role.textContent = founder ? "Founder" : tr("role.customer");
     role.className = "role" + (founder ? " role--founder" : "");
     $("#openPanel").hidden = !founder;
+    sortBar.hidden = !founder;
+    if (!founder && sorting) setSorting(false);
 
     // riparte l'animazione d'ingresso dell'hero dopo l'accesso
     window.scrollTo(0, 0);
@@ -846,7 +995,8 @@
   function renderProdTable() {
     const q = $("#prodSearch").value.trim().toLowerCase();
     const rows = products.filter((p) => match(q, p.name, p.category, p.sellauthProductId)).map((p) => `
-      <tr>
+      <tr data-id="${esc(p.id)}">
+        <td class="td-handle"><button type="button" class="drag-handle" aria-label="${esc(tr("sort.handle"))}" title="${esc(q ? tr("sort.clearSearch") : tr("sort.handle"))}"${q ? " disabled" : ""}>⠿</button></td>
         <td><div class="cell-flex">${p.image ? `<img class="thumb" src="${esc(p.image)}" alt="" />` : `<span class="thumb">♛</span>`}
           <div><strong>${esc(p.name)}</strong><small>${esc(p.category)}</small></div></div></td>
         <td>${euro.format(Number(p.price) || 0)}${p.oldPrice ? `<small><s>${euro.format(p.oldPrice)}</s></small>` : ""}</td>
@@ -860,9 +1010,15 @@
           <button class="mini mini--danger" data-remove="${esc(p.id)}">${tr("btn.delete")}</button>
         </div></td>
       </tr>`);
-    $("#prodTable").innerHTML = table([tr("th.product"), tr("th.price"), tr("th.stock"), tr("th.badge"), tr("th.sellauth"), ""], rows, tr("empty.cards"));
+    $("#prodTable").innerHTML = table(["", tr("th.product"), tr("th.price"), tr("th.stock"), tr("th.badge"), tr("th.sellauth"), ""], rows, tr("empty.cards"));
   }
   $("#prodSearch").addEventListener("input", renderProdTable);
+  makeSortable($("#prodTable"), {
+    item: "tr[data-id]", handle: ".drag-handle",
+    canStart: () => !$("#prodSearch").value.trim(),
+    ghost: (row) => { const g = document.createElement("div"); g.className = "drag-ghost--row"; g.innerHTML = row.children[1]?.innerHTML || ""; return g; },
+    onDrop: (ids) => saveOrder(ids, "table")
+  });
 
   $("#prodTable").addEventListener("click", async (e) => {
     const edit = e.target.closest("[data-edit]");

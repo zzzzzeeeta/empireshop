@@ -9,7 +9,9 @@
       "sellauth-proxy.js",
       "README.md",
       "SECURITY.md",
-      "tests/**"
+      "tests/**",
+      "docs/**",
+      "PROXY.md"
     ],
     "headers": [
       {

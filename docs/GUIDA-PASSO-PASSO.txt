@@ -1,0 +1,134 @@
+EMPIRE SHOP - GUIDA PASSO PASSO
+================================
+Scritta per chi riceve il progetto e deve finire il lavoro. Non serve saper programmare.
+
+COSA È GIÀ FATTO
+- Il sito è pronto. Il cliente può cliccare una card e leggere la descrizione del prodotto.
+- Il pagamento con SellAuth è già collegato al negozio:
+  https://empire-shops.mysellauth.com  (Shop ID 273451)
+- Quando un cliente paga, SellAuth gli consegna il prodotto da solo (a schermo e via email).
+
+COSA RESTA DA FARE
+Per ogni prodotto: crearlo su SellAuth e poi collegarlo alla sua card sul sito.
+Il sito NON legge da solo i prodotti di SellAuth: il collegamento si fa una volta per prodotto, a mano.
+
+------------------------------------------------------------
+PRIMA DI INIZIARE: DUE ACCESSI NECESSARI
+------------------------------------------------------------
+1) ACCESSO A SELLAUTH (dash.sellauth.com)
+   Chi ha creato il negozio ti invita da: Impostazioni -> Team (Teams and Permissions).
+   Non farti dare la password: con l'invito hai il tuo accesso.
+
+2) ACCESSO FOUNDER AL SITO
+   Il Pannello di controllo si vede solo con l'account Founder.
+   Founder = l'account registrato sul sito con l'email scritta in js/config.js alla riga FOUNDER_EMAIL.
+   Chiedi al proprietario di:
+   - registrarsi lui sul sito e creare le card insieme a te, oppure
+   - cambiare FOUNDER_EMAIL (in js/config.js E in firestore.rules) con la TUA email, poi registrarti tu.
+   Non scambiatevi mai le password.
+
+------------------------------------------------------------
+PASSO 1 - CONTROLLA SELLAUTH (una volta sola)
+------------------------------------------------------------
+1. Entra su https://dash.sellauth.com
+2. Controlla che ci sia almeno un metodo di pagamento attivo (Settings -> Payment Methods).
+   Senza metodo di pagamento nessuno può comprare.
+
+------------------------------------------------------------
+PASSO 2 - CREA IL PRODOTTO SU SELLAUTH
+------------------------------------------------------------
+1. Su dash.sellauth.com clicca "Products" e poi "Create".
+2. Scrivi il nome e il prezzo.
+3. Scegli cosa riceve il cliente (tipo di consegna):
+   - SERIALS  = chiavi, account, codici. Incolli un elemento per riga. Ogni cliente ne riceve uno diverso.
+   - SERVICE  = un testo uguale per tutti (guida, link, istruzioni). Si scrive nel campo "Instructions".
+   - FILES    = un file da scaricare.
+4. Salva.
+5. COPIA IL NUMERO ID DEL PRODOTTO (es. 35665).
+   Lo trovi nell'elenco Products, oppure nell'indirizzo della pagina del prodotto.
+   Scrivilo in un foglio: ti serve al passo 4.
+
+------------------------------------------------------------
+PASSO 3 - APRI IL SITO SUL TUO COMPUTER (per provare)
+------------------------------------------------------------
+Non aprire il file con doppio clic: il login non funziona bene così.
+1. Installa Visual Studio Code (gratis): https://code.visualstudio.com
+2. In VS Code: File -> Apri cartella -> scegli questa cartella (quella con index.html).
+3. A sinistra clicca l'icona dei blocchi (Estensioni), cerca "Live Server" (di Ritwick Dey) e installalo.
+4. Tasto destro su "index.html" -> "Open with Live Server".
+5. Si apre il sito nel browser. Accedi con l'account Founder.
+
+ATTENZIONE: il sito in prova usa lo stesso database del sito vero.
+Le card che crei in prova compariranno anche sul sito pubblicato.
+
+------------------------------------------------------------
+PASSO 4 - COLLEGA LA CARD AL PRODOTTO
+------------------------------------------------------------
+1. In alto a destra clicca il tuo nome -> "Pannello Founder".
+2. Scheda "Card prodotti":
+   - card nuova  -> "Nuova card"
+   - card esistente -> "Modifica"
+3. Compila nome, categoria, prezzo, disponibilità, immagine.
+4. DESCRIZIONE: scrivi cosa contiene il prodotto e come si usa. Il cliente la legge cliccando la card.
+   Puoi andare a capo e incollare link.
+5. In fondo, nel riquadro "SellAuth - consegna automatica":
+   - "ID prodotto SellAuth": incolla il numero copiato al passo 2.
+   - "ID variante": LASCIA VUOTO.
+6. Clicca "Salva card".
+7. La card ora mostra "Consegna automatica" e nella sua finestra c'è il pulsante "Compra ora".
+
+IMPORTANTE: il prezzo e la quantità della card sul sito devono essere UGUALI a quelli su SellAuth.
+I prezzi veri sono quelli di SellAuth. Se cambi un prezzo su SellAuth, cambialo anche nella card.
+
+------------------------------------------------------------
+PASSO 5 - FAI UN ACQUISTO DI PROVA
+------------------------------------------------------------
+1. Crea un prodotto di prova su SellAuth a pochi centesimi (es. 0,50 euro), con 2-3 chiavi finte.
+2. Collegalo a una card (Passo 4).
+3. Sul sito clicca la card -> "Compra ora" -> paga.
+4. Controlla: il prodotto compare subito nella finestra di pagamento ed è arrivato anche via email.
+5. Se non funziona, guarda "SE QUALCOSA NON VA" qui sotto.
+6. Finita la prova, nascondi o elimina il prodotto di prova (su SellAuth e la card sul sito).
+
+------------------------------------------------------------
+PASSO 6 - TUTTI GLI ALTRI PRODOTTI
+------------------------------------------------------------
+Ripeti i passi 2 e 4 per ogni prodotto, uno alla volta.
+
+------------------------------------------------------------
+PASSO 7 - PUBBLICA IL SITO
+------------------------------------------------------------
+Il sito va messo online (hosting). Opzioni semplici e gratuite: Netlify, Vercel, Cloudflare Pages o Firebase Hosting.
+- Pubblica questa cartella intera (index.html deve stare alla radice).
+- Poi su Firebase (console.firebase.google.com) -> Authentication -> Settings -> Domini autorizzati:
+  aggiungi l'indirizzo del sito pubblicato.
+- Controlla anche su Firebase: Authentication con "Email/password" attivo e le regole Firestore pubblicate
+  (contenuto del file firestore.rules). Vedi README.md.
+
+------------------------------------------------------------
+SE QUALCOSA NON VA
+------------------------------------------------------------
+- "Compra ora" non c'è: la card non ha l'ID prodotto SellAuth (Passo 4), oppure l'ID contiene lettere/spazi.
+- Si apre il vecchio ticket Discord: la card non è collegata, oppure il carrello contiene anche prodotti non collegati.
+- Il pagamento dice "non disponibile": controlla che il prodotto su SellAuth sia "Public" e abbia disponibilità (stock).
+- Il checkout non parte: controlla che su SellAuth ci sia un metodo di pagamento attivo.
+- Non vedi il Pannello Founder: non sei loggato con l'email Founder (vedi "Prima di iniziare").
+- Il login non va: apri il sito con Live Server (Passo 3) o da un indirizzo online, mai con doppio clic.
+- Il cliente dice che non ha ricevuto il prodotto: su SellAuth apri Invoices, trova l'ordine e usa
+  "Resend / Redeliver". Controlla che l'email scritta dal cliente sia giusta.
+
+------------------------------------------------------------
+REGOLE DI SICUREZZA (leggile!)
+------------------------------------------------------------
+- NON scrivere MAI la API key di SellAuth nel sito o nei file del progetto: chiunque aprendo il sito la vedrebbe.
+  Non serve per nulla in questo progetto.
+- NON mandare password o chiavi in chat o per email. Usa gli inviti (Team di SellAuth).
+- Lo Shop ID (273451) invece non è un segreto, può restare nel sito.
+
+------------------------------------------------------------
+DOVE SI MODIFICA COSA
+------------------------------------------------------------
+- js/config.js     -> negozio SellAuth (shopId, shopUrl) e Firebase
+- js/products.js   -> card di esempio iniziali (poi si usa il Pannello)
+- js/i18n.js       -> tutti i testi in 5 lingue
+- README.md        -> istruzioni tecniche complete

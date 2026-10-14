@@ -156,6 +156,13 @@ const Backend = (() => {
         write(K.products, list);
         return p;
       },
+      async reorderProducts(ids) {
+        if (!isFounder()) fail("not-allowed");
+        const pos = new Map(ids.map((id, i) => [String(id), i]));
+        const rank = (p) => (pos.has(String(p.id)) ? pos.get(String(p.id)) : 1e9);
+        const list = read(K.products, []).sort((a, b) => rank(a) - rank(b));
+        write(K.products, list);
+      },
       async deleteProduct(id) {
         if (!isFounder()) fail("not-allowed");
         write(K.products, read(K.products, []).filter((x) => String(x.id) !== String(id)));
@@ -305,6 +312,13 @@ const Backend = (() => {
           if (id) { await db.collection("products").doc(String(id)).set(data, { merge: true }); return p; }
           const ref = await db.collection("products").add({ ...data, order: Date.now() });
           return { ...p, id: ref.id };
+        } catch (e) { mapError(e); }
+      },
+      async reorderProducts(ids) {
+        try {
+          const batch = db.batch();
+          ids.forEach((id, i) => batch.update(db.collection("products").doc(String(id)), { order: i }));
+          await batch.commit();
         } catch (e) { mapError(e); }
       },
       async deleteProduct(id) {

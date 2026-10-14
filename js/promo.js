@@ -15,8 +15,33 @@
     set("promoMonth", month.toUpperCase());
     set("promoA", t[0]); set("promoB", t[1]); set("promoC", t[2]);
   }
+  /* Adatta la barra allo spazio vero: in ogni lingua le parole hanno lunghezze diverse.
+     Prima si tolgono le parole laterali, poi le illustrazioni; il centro (sacchetto + scritta) resta sempre. */
+  const inner = bar.querySelector(".promo__in");
+  const GAP_MIN = 30;                                    // spazio minimo tra un gruppo e l'altro
+  function fit() {
+    bar.classList.remove("promo--no-dim", "promo--no-art");
+    if (bar.hidden || !inner) return;
+    const cs = getComputedStyle(inner);
+    const avail = inner.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const need = () => {
+      const kids = [...inner.children].filter((el) => getComputedStyle(el).display !== "none");
+      return kids.reduce((w, el) => w + el.getBoundingClientRect().width, 0) + GAP_MIN * Math.max(0, kids.length - 1);
+    };
+    if (need() <= avail) return;
+    bar.classList.add("promo--no-dim");
+    if (need() <= avail) return;
+    bar.classList.add("promo--no-art");
+  }
+  let fitRaf = 0;
+  const fitSoon = () => { cancelAnimationFrame(fitRaf); fitRaf = requestAnimationFrame(fit); };
+
   render();
-  if (typeof I18N !== "undefined" && I18N.onChange) I18N.onChange(render);
+  fit();
+  if (typeof I18N !== "undefined" && I18N.onChange) I18N.onChange(() => { render(); fitSoon(); });
+  window.addEventListener("resize", fitSoon);
+  window.addEventListener("load", fitSoon);
+  if (document.fonts) { document.fonts.ready.then(fitSoon); document.fonts.addEventListener?.("loadingdone", fitSoon); }
 
   const root = document.documentElement;
   const sync = () => {

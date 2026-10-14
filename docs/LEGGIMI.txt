@@ -1,0 +1,31 @@
+EMPIRE SHOP
+===========
+
+PRIMA DI TUTTO
+Leggi "PASSI-DA-FARE.txt": contiene i passaggi (Firebase, Cloudflare, SellAuth, sicurezza) che solo tu puoi fare.
+
+PER VEDERE IL SITO
+Apri questa cartella in VS Code e avvia index.html con Live Server (con Firebase attivo il doppio clic su index.html non permette il login).
+Parte dalla schermata di accesso: clicca "Registrati" e crea un account.
+Il primo account creato diventa Founder e, dal menu in alto a destra, apre il Pannello di controllo
+(card prodotti, accessi, utenti).
+
+NOTA
+Questa è una versione dimostrativa: account, card e carrello vengono salvati solo nel tuo browser.
+Quello che crei o modifichi tu non lo vede nessun altro.
+
+PAGAMENTI SELLAUTH (CONSEGNA AUTOMATICA)
+Il cliente paga direttamente sul sito e riceve subito il prodotto (a schermo e via email).
+Per attivarlo: scrivi shopId e shopUrl del tuo negozio SellAuth in js/config.js (sezione SELLAUTH),
+poi nel Pannello di controllo scrivi in ogni card l'ID del prodotto SellAuth.
+Nel Pannello puoi anche scrivere la descrizione di ogni prodotto: il cliente la vede cliccando la card.
+Istruzioni complete in README.md.
+
+PER MODIFICARE IL CODICE
+Questa cartella contiene i file sorgente (HTML, CSS, JavaScript).
+Aprila in VS Code, installa l'estensione "Live Server" e avvia index.html con "Open with Live Server".
+Tutte le istruzioni sono nel file README.md.
+
+LINGUE
+Il sito si può leggere in italiano, inglese, spagnolo, francese e tedesco: usa il selettore con il globo in alto a destra.
+Per modificare le traduzioni: js/i18n.js (istruzioni nel README).

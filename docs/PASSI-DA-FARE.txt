@@ -1,0 +1,114 @@
+PASSI CHE DEVI FARE TU — EMPIRE SHOP
+====================================
+(Tutto il resto è già fatto nel codice. Questi passaggi li puoi fare solo tu perché
+servono i tuoi account: Firebase, Cloudflare, SellAuth. Falli IN QUESTO ORDINE.)
+
+PRIMA DI TUTTO — come aprire il sito
+- Il sito si apre con Live Server in VS Code (tasto destro su index.html → "Open with Live Server").
+- NON aprire index.html con il doppio clic: con Firebase il login lì non funziona.
+
+------------------------------------------------------------
+PASSO 1 — Verifica la tua email Founder  (2 minuti)
+------------------------------------------------------------
+Serve perché le nuove regole di sicurezza riconoscono il Founder solo se l'email è verificata.
+1. Apri il sito (Live Server) e accedi con l'email Founder.
+2. Apri il Pannello di controllo (menu in alto a destra → Pannello).
+3. Se vedi un riquadro giallo "Verifica la tua email Founder", premi "Invia email di verifica".
+   (Se il riquadro non c'è, la tua email è già verificata: passa al Passo 2.)
+4. Apri la tua casella email (guarda anche SPAM), clicca il link nel messaggio di Firebase.
+5. Torna al sito, esci e rientra (logout/login).
+
+------------------------------------------------------------
+PASSO 2 — Pubblica le regole di sicurezza  (3 minuti)
+------------------------------------------------------------
+1. Vai su https://console.firebase.google.com e apri il progetto "empire-shop-a91eb".
+2. Menu a sinistra: Build → Firestore Database → scheda "Regole" (Rules).
+3. Cancella tutto il testo che c'è.
+4. Apri il file firestore.rules con VS Code, seleziona tutto (Ctrl+A), copia (Ctrl+C).
+5. Incolla nella console (Ctrl+V) e premi "Pubblica" (Publish).
+6. Prova: ricarica il sito, accedi come Founder, modifica una card. Se salva, è tutto a posto.
+   Se compare un errore di permessi: il Passo 1 non è stato completato (email non verificata).
+
+------------------------------------------------------------
+PASSO 3 — Impostazioni di accesso in Firebase  (3 minuti)
+------------------------------------------------------------
+Sempre nella console Firebase → Build → Authentication:
+1. Scheda "Impostazioni" → "Criteri password": imposta lunghezza minima 8 e salva.
+2. Scheda "Impostazioni" → "Domini autorizzati": lascia localhost e il tuo dominio. Aggiungi qui
+   l'indirizzo del sito quando lo metti online (Passo 6). Togli i domini che non usi.
+
+------------------------------------------------------------
+PASSO 4 — Limita la chiave Firebase al tuo sito  (4 minuti)
+------------------------------------------------------------
+1. Vai su https://console.cloud.google.com → scegli il progetto "empire-shop-a91eb".
+2. Menu → "API e servizi" → "Credenziali".
+3. Clicca la chiave "Browser key" (o "API key" web) → "Restrizioni delle applicazioni" →
+   "Referrer HTTP (siti web)" → aggiungi:  tuodominio.it/*   e   localhost:*   (finché provi in locale).
+4. Salva. (Se dopo il salvataggio il login smette di funzionare, hai sbagliato il dominio: correggilo.)
+
+------------------------------------------------------------
+PASSO 5 — Crea il proxy Cloudflare (importazione prodotti)  (10 minuti)
+------------------------------------------------------------
+A) Nuova API key SellAuth di SOLA LETTURA
+   1. dash.sellauth.com → il tuo account → API Keys → "Create API Key".
+   2. Nome: "Sito sola lettura". Limita al negozio Empire Shop. Permessi: solo lettura prodotti.
+   3. COPIA la chiave subito (si vede una volta sola) e tienila in un blocco note, NON in chat.
+   4. Elimina la vecchia chiave "API SITO" (quella con tutti i permessi) e quella che hai incollato in chat.
+B) Il Worker
+   1. Vai su https://dash.cloudflare.com e crea un account gratuito.
+   2. Menu a sinistra: "Workers & Pages" → "Create" → "Create Worker" → nome: empire-sellauth → "Deploy".
+   3. Clicca "Edit code": cancella tutto, incolla TUTTO il contenuto di sellauth-proxy.js → "Deploy".
+   4. Torna al Worker → "Settings" → "Variables and Secrets" → "Add":
+        Nome: SHOP_ID          Tipo: Text    Valore: 273451
+        Nome: SA_KEY           Tipo: Secret  Valore: (la chiave del punto A)
+        Nome: ALLOWED_ORIGIN   Tipo: Text    Valore: http://127.0.0.1:5500, http://localhost:5500
+      e poi "Deploy" per salvare.
+   5. In alto trovi l'indirizzo del Worker, tipo https://empire-sellauth.tuonome.workers.dev — copialo.
+C) Collegalo al sito
+   1. In VS Code apri js/config.js, cerca  apiProxy: ""
+   2. Scrivi l'indirizzo tra le virgolette (senza "/" finale):
+        apiProxy: "https://empire-sellauth.tuonome.workers.dev"
+   3. Salva, ricarica il sito (Ctrl+F5).
+D) Prova
+   Pannello → Nuova card (o modifica quella del tweak) → scrivi l'ID prodotto SellAuth e premi
+   "Importa da SellAuth". Sotto compare il messaggio: "Fatto: ..." con nome e prezzo.
+   Se compare un errore, leggi il messaggio: è scritto per dirti cosa manca.
+   IMPORTANTE: l'ID prodotto è quello del Tweak PC ADVANCED su SellAuth (dash.sellauth.com → Prodotti).
+   Dopo l'importazione il sito compila da solo anche l'ID variante: serve per il pagamento a tutta pagina.
+   Se una card non ha l'ID variante, il sito usa la vecchia finestra piccola di SellAuth: reimporta la card.
+
+------------------------------------------------------------
+PASSO 6 — Metti il sito online  (10 minuti)
+------------------------------------------------------------
+Opzione facile (Netlify, gratis, senza installare nulla):
+1. Vai su https://app.netlify.com/drop e trascina questa cartella nella pagina.
+2. Ti dà un indirizzo (es. qualcosa.netlify.app). Puoi cambiarlo in "Site settings".
+3. Aggiungi quell'indirizzo ai "Domini autorizzati" di Firebase (Passo 3) e alla chiave Google (Passo 4).
+4. Cloudflare → Worker → Settings → Variables → ALLOWED_ORIGIN: aggiungi https://iltuoindirizzo
+   (e togli gli indirizzi localhost).
+Opzione Firebase Hosting (richiede Node.js): apri il terminale in questa cartella, poi
+   npm install -g firebase-tools  →  firebase login  →  firebase deploy
+   (il progetto è già configurato in .firebaserc e firebase.json).
+
+------------------------------------------------------------
+PASSO 7 — Prova un acquisto e attiva la protezione CSP  (10 minuti)
+------------------------------------------------------------
+1. Dal sito online fai un acquisto di prova del tweak (puoi annullare/rimborsare da SellAuth).
+2. Durante la prova apri gli strumenti del browser (F12) → scheda "Console". Se vedi messaggi
+   rossi che iniziano con "[Report Only] Refused to ..." il pagamento o le animazioni potrebbero
+   essere bloccati: mandameli (testo o screenshot) e li sistemo.
+3. Se NON ci sono messaggi: in firebase.json (o _headers per Netlify) cambia il nome
+   "Content-Security-Policy-Report-Only" in "Content-Security-Policy" e ripubblica (Passo 6).
+
+------------------------------------------------------------
+PASSO 8 — Cose da fare quando hai tempo
+------------------------------------------------------------
+- SellAuth: aggiorna il testo generale del negozio (descrizione in fondo alle pagine) in modo che parli
+  solo dei prodotti che vendi davvero.
+- Privacy: nel sito raccogliamo IP e dispositivo degli accessi: scrivilo in una pagina "Privacy".
+- Backup: nella console Firebase → Firestore → "Importa/Esporta" (le esportazioni programmate
+  richiedono il piano Blaze). Se non vuoi pagare, esporta a mano ogni tanto.
+- 2FA per il Founder: con Firebase si ottiene solo con "Identity Platform" (a pagamento). Per ora
+  usa una password lunga e diversa da tutte le altre.
+
+SE TI BLOCCHI: dimmi il numero del passo e copia qui il messaggio d'errore che vedi.

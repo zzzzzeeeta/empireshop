@@ -59,7 +59,6 @@ La consegna la fa SellAuth, quindi funziona anche se il sito è statico e non se
    - `shopUrl`: l'indirizzo del negozio, es. `https://empireshop.mysellauth.com` (o il tuo dominio personalizzato)
 4. Nel Pannello di controllo apri ogni card e, nel riquadro **SellAuth · consegna automatica**, scrivi l'**ID prodotto** SellAuth
    (dash.sellauth.com → Products). L'**ID variante** è facoltativo: se lo lasci vuoto il cliente sceglie la variante nel checkout.
-5. Se usi il file unico `Empire-Shop.html`, ricordati di rigenerarlo (o modifica lo stesso `SELLAUTH` anche lì dentro).
 
 **Mai** scrivere la API key di SellAuth nel sito: `config.js` è pubblico. Lo `shopId` invece non è un segreto.
 
@@ -94,7 +93,6 @@ In modalità demo i dati restano salvati nel browser. Per far ripartire il sito 
 card originali, carrello vuoto) cambia `DEMO_STORAGE` in `js/config.js`, ad esempio da `"empire-v2"` a `"empire-v3"`.
 
 ## File unico da condividere
-`../Empire-Shop.html` (fuori dalla cartella progetto) contiene tutto il sito in un solo file (stili, script, logo, animazione e Three.js).
 Basta aprirlo con doppio clic: funziona anche senza internet, servono solo i font di Google per la tipografia definitiva.
 
 ## Registro accessi: IP e dispositivo
